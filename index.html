@@ -1,4 +1,11 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#03050b">
+<meta name="color-scheme" content="dark">
+<meta name="description" content="Horloge galactique : la Voie lactée du Big Bang à l’ère noire, en 3D.">
 <title>Horloge galactique</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -34,7 +41,7 @@
   --dock-h:196px;
 }
 [hidden]{display:none!important}
-html,body{height:100%}
+html,body{height:100%;margin:0;padding:0}
 body{background:var(--void);color:var(--ink);font-family:var(--f-ui);font-size:14px;line-height:1.45;overflow:hidden;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
 button{font:inherit;color:inherit}
 :focus-visible{outline:2px solid var(--sol);outline-offset:2px}
@@ -183,6 +190,9 @@ input[type=range]{width:100%;margin:4px 0 0;accent-color:var(--sol)}
 .fallback{position:fixed;inset:0;display:grid;place-items:center;padding:24px;text-align:center;color:var(--ink-2);pointer-events:none}
 @media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
 </style>
+</head>
+<body>
+<noscript><p style="padding:24px;color:#ebe5d8">Activez JavaScript pour afficher l’horloge galactique.</p></noscript>
 
 <div id="app">
   <canvas id="gl" aria-label="Rendu de la Voie lactée. Glissez pour tourner, pincez pour zoomer."></canvas>
@@ -809,7 +819,9 @@ let obsIdx = 3;
 
 /* ================= 10. Particules ================= */
 const IS_SMALL = Math.min(innerWidth, innerHeight) < 700;
-const N_TARGET = IS_SMALL ? 52000 : 110000;
+// Appareils modestes (peu de mémoire ou de cœurs) : moins de particules pour éviter la perte du contexte WebGL.
+const LOW_END = (navigator.deviceMemory && navigator.deviceMemory <= 3) || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4);
+const N_TARGET = IS_SMALL ? (LOW_END ? 32000 : 52000) : (LOW_END ? 70000 : 110000);
 function buildParticles(N) {
   const rnd = rng(20261010);
   const gauss = () => { let u = 0; while (u === 0) u = rnd(); return Math.sqrt(-2 * Math.log(u)) * Math.cos(2 * Math.PI * rnd()); };
@@ -2270,6 +2282,7 @@ function start(data) {
 addEventListener('resize', () => { resize(); if (activeTab === 'temps') drawChart(); });
 if (window.ResizeObserver) new ResizeObserver(() => layoutFree()).observe(dock);
 glCanvas.addEventListener('webglcontextlost', e => { e.preventDefault(); G.ok = false; el('fallback').hidden = false; });
+glCanvas.addEventListener('webglcontextrestored', () => { HDR = null; if (initGL()) { el('fallback').hidden = true; resize(); } });
 const hot = window.claude && window.claude.hot;
 if (hot && hot.snapshot) hot.snapshot(() => ({ T, speed: speedVal, playing, scenario, band: bandIdx, view: currentView, tab: activeTab }));
 if (hot && hot.ready) hot.ready(start); else start((hot && hot.data) || {});
